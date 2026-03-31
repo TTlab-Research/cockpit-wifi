@@ -2,7 +2,7 @@ Name:           cockpit-wifi
 Version:        0.1.0
 Release:        1%{?dist}
 Summary:        Cockpit plugin for complete WiFi management
-License:        GPL-3.0-or-later
+License:        MIT
 URL:            https://github.com/TTlab-official/cockpit-wifi
 Source0:        %{name}-%{version}.tar.gz
 

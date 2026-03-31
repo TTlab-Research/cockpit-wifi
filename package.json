@@ -8,8 +8,12 @@
     "type": "git",
     "url": "https://github.com/TTlab-official/cockpit-wifi.git"
   },
-  "author": "TTlab",
-  "license": "GPL-3.0-or-later",
+  "author": {
+    "name": "TTlab",
+    "url": "https://ttlab.it",
+    "email": "info@ttlab.it"
+  },
+  "license": "MIT",
   "engines": {
     "node": ">= 18"
   },
