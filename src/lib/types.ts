@@ -25,8 +25,9 @@ export interface APConfig {
     ssid: string;
     passphrase: string;
     address: string;
-    channel: number;
+    channel: number | 'auto';
     band: '2.4GHz' | '5GHz' | 'auto';
+    countryCode: string;
     interface: string;
     /** AP operating mode: router (DHCP+NAT+gateway), isolated (DHCP IP-only), bridge (external DHCP) */
     mode: APMode;

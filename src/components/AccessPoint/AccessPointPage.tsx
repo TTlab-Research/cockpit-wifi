@@ -44,8 +44,9 @@ const DEFAULT_CONFIG: APConfig = {
     ssid: '',
     passphrase: '',
     address: '192.168.4.1',
-    channel: 6,
+    channel: 'auto',
     band: 'auto',
+    countryCode: 'IT',
     interface: '',
     mode: 'router',
     bridgeInterface: '',
@@ -54,6 +55,24 @@ const DEFAULT_CONFIG: APConfig = {
     enabled: false
 };
 
+const COUNTRY_CODES = [
+    { code: 'IT', label: 'Italia (IT)' },
+    { code: 'US', label: 'United States (US)' },
+    { code: 'DE', label: 'Deutschland (DE)' },
+    { code: 'FR', label: 'France (FR)' },
+    { code: 'ES', label: 'España (ES)' },
+    { code: 'GB', label: 'United Kingdom (GB)' },
+    { code: 'CH', label: 'Schweiz (CH)' },
+    { code: 'AT', label: 'Österreich (AT)' },
+    { code: 'NL', label: 'Nederland (NL)' },
+    { code: 'BE', label: 'Belgique (BE)' },
+    { code: 'PL', label: 'Polska (PL)' },
+    { code: 'SE', label: 'Sverige (SE)' },
+    { code: 'JP', label: 'Japan (JP)' },
+    { code: 'AU', label: 'Australia (AU)' },
+    { code: 'CA', label: 'Canada (CA)' }
+];
+
 const CHANNELS_24: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 const CHANNELS_5: number[] = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165];
 
@@ -61,6 +80,14 @@ function channelsForBand (band: string): number[] {
     if (band === '5GHz') return CHANNELS_5;
     if (band === '2.4GHz') return CHANNELS_24;
     return [...CHANNELS_24, ...CHANNELS_5];
+}
+
+function channelToString (ch: number | 'auto'): string {
+    return ch === 'auto' ? 'auto' : String(ch);
+}
+
+function parseChannel (val: string): number | 'auto' {
+    return val === 'auto' ? 'auto' : parseInt(val, 10);
 }
 
 function getModeDescriptions (): Record<APMode, string> {
@@ -280,17 +307,26 @@ export const AccessPointPage: React.FC = () => {
                             </FormSelect>
                         </FormGroup>
 
+                        <FormGroup label={_('Country')} fieldId='ap-country'>
+                            <FormSelect
+                                id='ap-country'
+                                value={config.countryCode}
+                                onChange={(_event, val) => updateConfig('countryCode', val)}
+                                isDisabled={isActive}
+                            >
+                                {COUNTRY_CODES.map(c => (
+                                    <FormSelectOption key={c.code} value={c.code} label={c.label} />
+                                ))}
+                            </FormSelect>
+                        </FormGroup>
+
                         <FormGroup label={_('Band')} fieldId='ap-band'>
                             <FormSelect
                                 id='ap-band'
                                 value={config.band}
                                 onChange={(_event, val) => {
                                     updateConfig('band', val);
-                                    // reset channel to first available for new band
-                                    const chs = channelsForBand(val);
-                                    if (!chs.includes(config.channel)) {
-                                        updateConfig('channel', chs[0]);
-                                    }
+                                    updateConfig('channel', val === 'auto' ? 'auto' : channelsForBand(val)[0]);
                                 }}
                                 isDisabled={isActive}
                             >
@@ -303,13 +339,15 @@ export const AccessPointPage: React.FC = () => {
                         <FormGroup label={_('Channel')} fieldId='ap-channel'>
                             <FormSelect
                                 id='ap-channel'
-                                value={String(config.channel)}
-                                onChange={(_event, val) => updateConfig('channel', parseInt(val, 10))}
+                                value={channelToString(config.channel)}
+                                onChange={(_event, val) => updateConfig('channel', parseChannel(val))}
                                 isDisabled={isActive}
                             >
-                                {availableChannels.map(ch => (
-                                    <FormSelectOption key={ch} value={String(ch)} label={String(ch)} />
-                                ))}
+                                {config.band === 'auto'
+                                    ? <FormSelectOption value='auto' label={_('Automatic')} />
+                                    : availableChannels.map(ch => (
+                                        <FormSelectOption key={ch} value={String(ch)} label={String(ch)} />
+                                    ))}
                             </FormSelect>
                         </FormGroup>
 

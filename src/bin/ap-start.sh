@@ -29,14 +29,31 @@ AP_MODE=$(read_config mode "router")
 AP_BRIDGE_IFACE=$(read_config bridgeInterface "")
 AP_DHCP_START=$(read_config dhcpRangeStart "192.168.4.20")
 AP_DHCP_END=$(read_config dhcpRangeEnd "192.168.4.252")
+AP_COUNTRY=$(read_config countryCode "IT")
+
+# Set regulatory domain from config
+sudo iw reg set "$AP_COUNTRY" 2>/dev/null || true
 
 # nmcli uses "bg" for 2.4GHz and "a" for 5GHz.
-# "auto" defaults to bg/6: required because with unset regulatory domain
-# wpa_supplicant times out without an explicit band/channel.
+# "auto" or channel "auto" defaults to bg/6 to avoid wpa_supplicant timeout.
 case "$AP_BAND" in
-    2.4GHz) NM_BAND_ARGS="wifi.band bg wifi.channel ${AP_CHANNEL}" ;;
-    5GHz)   NM_BAND_ARGS="wifi.band a  wifi.channel ${AP_CHANNEL}" ;;
-    *)      NM_BAND_ARGS="wifi.band bg wifi.channel 6" ;;
+    2.4GHz)
+        if [ "$AP_CHANNEL" = "auto" ]; then
+            NM_BAND_ARGS="wifi.band bg"
+        else
+            NM_BAND_ARGS="wifi.band bg wifi.channel ${AP_CHANNEL}"
+        fi
+        ;;
+    5GHz)
+        if [ "$AP_CHANNEL" = "auto" ]; then
+            NM_BAND_ARGS="wifi.band a"
+        else
+            NM_BAND_ARGS="wifi.band a wifi.channel ${AP_CHANNEL}"
+        fi
+        ;;
+    *)
+        NM_BAND_ARGS="wifi.band bg wifi.channel 6"
+        ;;
 esac
 
 if [ -z "$AP_SSID" ] || [ -z "$AP_PASS" ] || [ -z "$AP_IFACE" ]; then
