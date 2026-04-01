@@ -15,6 +15,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Correct artifact paths in release workflow (.deb and .rpm)
 - Remove lefthook from ci (not needed, linters run explicitly)
 - Add nodejs/npm to deb build deps, handle pre-release version in rpm spec
+- Remove debian/compat duplicate, fix rpm tarball dir for pre-release versions
 
 ### Maintenance
 - Switch license to MIT, add TTlab author metadata
