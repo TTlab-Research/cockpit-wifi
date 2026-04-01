@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        if command -v systemctl >/dev/null 2>&1 && systemctl is-system-running --quiet 2>/dev/null; then
+            systemctl daemon-reload || true
+            systemctl enable cockpit-wifi-ap.service || true
+            # Start only if AP was previously enabled in config
+            if [ -f /etc/cockpit-wifi-ap/ap.conf ]; then
+                ENABLED=$(python3 -c "import json; print(json.load(open('/etc/cockpit-wifi-ap/ap.conf')).get('enabled', False))" 2>/dev/null || echo "False")
+                if [ "$ENABLED" = "True" ]; then
+                    systemctl restart cockpit-wifi-ap.service || true
+                fi
+            fi
+        fi
+        ;;
+esac
+
+#DEBHELPER#
