@@ -8,6 +8,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Initial cockpit-wifi plugin
+- Rename to cockpit-wifi-ap, ap-only scope
 
 ### Fixed
 - Resolve all ESLint errors (jsx-quotes, comma-dangle, no-use-before-define)
