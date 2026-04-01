@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # git-cliff needs full history
+          fetch-depth: 0
 
       - name: Install git-cliff
         uses: taiki-e/install-action@v2
@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main  # pick up the changelog commit
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -59,12 +59,15 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           sed -i "1s/([^)]*)/($VERSION-1)/" debian/changelog
           dpkg-buildpackage -us -uc -b
+          # dpkg-buildpackage outputs to parent dir — copy into workspace
+          mkdir -p packages
+          cp ../cockpit-wifi_*.deb packages/
 
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
           name: deb-package
-          path: ../cockpit-wifi_*.deb
+          path: packages/*.deb
           retention-days: 7
 
   build-rpm:
@@ -84,27 +87,27 @@ jobs:
       - name: Setup rpmbuild tree
         run: rpmdev-setuptree
 
-      - name: Build source tarball
+      - name: Build .rpm package
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           sed -i "s/^Version:.*/Version:        $VERSION/" packaging/rpm/cockpit-wifi.spec
           npm ci
           make pkg/lib
           NODE_ENV=production node build.js
-          tar czf ~/rpmbuild/SOURCES/cockpit-wifi-${VERSION}.tar.gz \
+          # Create source tarball with pre-built dist
+          tar czf "$HOME/rpmbuild/SOURCES/cockpit-wifi-${VERSION}.tar.gz" \
             --transform "s,^dist,cockpit-wifi-${VERSION}," \
             dist/ LICENSE README.md CHANGELOG.md
-
-      - name: Build .rpm package
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
           rpmbuild -bb packaging/rpm/cockpit-wifi.spec
+          # Copy output to workspace for upload
+          mkdir -p packages
+          cp "$HOME/rpmbuild/RPMS/noarch/cockpit-wifi-"*.rpm packages/
 
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4
         with:
           name: rpm-package
-          path: ~/rpmbuild/RPMS/noarch/cockpit-wifi-*.rpm
+          path: packages/*.rpm
           retention-days: 7
 
   release:
@@ -117,15 +120,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          fetch-depth: 0  # needed for git-cliff to find the tag
 
       - name: Install git-cliff
         uses: taiki-e/install-action@v2
         with:
           tool: git-cliff
 
-      - name: Generate release notes (current tag only)
-        run: git-cliff --current --strip header > RELEASE_NOTES.md
+      - name: Generate release notes for this tag
+        run: |
+          git-cliff --latest --strip header > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
 
       - name: Download .deb artifact
         uses: actions/download-artifact@v4
@@ -138,6 +143,9 @@ jobs:
         with:
           name: rpm-package
           path: dist-packages/
+
+      - name: List packages to release
+        run: ls -lh dist-packages/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
