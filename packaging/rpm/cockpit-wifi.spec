@@ -7,7 +7,7 @@ URL:            https://github.com/TTlab-Research/cockpit-wifi-ap
 Source0:        %{name}-%{version}.tar.gz
 
 BuildArch:      noarch
-# No BuildRequires — package ships pre-built assets from CI
+BuildRequires:  systemd-rpm-macros
 
 Requires:       cockpit >= 270
 Requires:       NetworkManager
@@ -58,6 +58,12 @@ install -m 644 cockpit/systemd/cockpit-wifi-ap.service \
 %{_unitdir}/cockpit-wifi-ap.service
 
 %changelog
+* Wed Apr 01 2026 TTlab <info@ttlab.it> - 0.1.2-1
+- Fix RPM build: add BuildRequires systemd-rpm-macros for %%{_unitdir} macro
+- Fix DEB build: remove --with=systemd (deprecated in debhelper compat >= 11)
+- Fix DHCP: dedicated dnsmasq instance, nftables auto-managed per AP session
+- Fix AP boot: cockpit-wifi-ap.service now depends only on NetworkManager
+
 * Wed Apr 01 2026 TTlab <info@ttlab.it> - 0.1.2-1
 - Fix config path: /etc/cockpit-wifi-ap/ap.conf (was /etc/cockpit-wifi)
 - Fix error display: parse JSON errors from backend scripts

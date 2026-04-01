@@ -1,7 +1,7 @@
 [Unit]
 Description=cockpit-wifi-ap Access Point
-After=network-online.target NetworkManager.service
-Wants=network-online.target NetworkManager.service
+After=NetworkManager.service
+Wants=NetworkManager.service
 
 [Service]
 Type=oneshot
