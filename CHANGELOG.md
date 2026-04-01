@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2-alpha.14] - 2026-04-01
+
+### Fixed
+- Ensure wifi ap beacons and stays enabled across reboots
+- Use \$mainpid to detect systemd execstop vs ui-initiated stop
+
 ## [0.1.2-alpha.12] - 2026-04-01
 
 ### Fixed
