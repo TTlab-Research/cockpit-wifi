@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2-alpha.4] - 2026-04-01
+
+### Added
+- Add i18n support with english default and italian translation
+
+### Fixed
+- Use menu instead of tools to place access point below rete in cockpit nav
+
 ## [0.1.2-alpha.3] - 2026-04-01
 
 ### Fixed
