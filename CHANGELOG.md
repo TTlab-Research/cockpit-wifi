@@ -14,6 +14,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Resolve stylelint @use extension error, bump to 0.1.1
 - Correct artifact paths in release workflow (.deb and .rpm)
 - Remove lefthook from ci (not needed, linters run explicitly)
+- Add nodejs/npm to deb build deps, handle pre-release version in rpm spec
 
 ### Maintenance
 - Switch license to MIT, add TTlab author metadata
