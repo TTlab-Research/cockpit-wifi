@@ -77,14 +77,24 @@ case "$AP_MODE" in
         # Enable IP forwarding
         sysctl -w net.ipv4.ip_forward=1
 
+        # Bring up AP first so the interface exists when dnsmasq starts
+        nmcli connection up cockpit-wifi-ap
+
+        # Wait for interface to be fully up (max 10s)
+        for i in $(seq 1 10); do
+            ip link show "$AP_IFACE" | grep -q "UP" && break
+            sleep 1
+        done
+
         # Configure dnsmasq: full DHCP with gateway + DNS
+        # bind-dynamic tolerates interfaces that appear after dnsmasq starts
         mkdir -p /etc/dnsmasq.d
         cat > /etc/dnsmasq.d/cockpit-wifi-ap.conf <<EOF
 interface=$AP_IFACE
 dhcp-range=${AP_DHCP_START},${AP_DHCP_END},255.255.255.0,8h
 dhcp-option=3,${AP_ADDR}
 dhcp-option=6,${AP_ADDR}
-bind-interfaces
+bind-dynamic
 EOF
         systemctl restart dnsmasq 2>/dev/null || true
 
@@ -95,8 +105,6 @@ EOF
             iptables -A FORWARD -i "$AP_IFACE" -o "$DEFAULT_IFACE" -j ACCEPT -m comment --comment "cockpit-wifi-ap"
             iptables -A FORWARD -i "$DEFAULT_IFACE" -o "$AP_IFACE" -m state --state RELATED,ESTABLISHED -j ACCEPT -m comment --comment "cockpit-wifi-ap"
         fi
-
-        nmcli connection up cockpit-wifi-ap
         ;;
 
     isolated)
@@ -116,18 +124,26 @@ EOF
             wifi-sec.key-mgmt wpa-psk \
             wifi-sec.psk "$AP_PASS"
 
+        # Bring up AP first so the interface exists when dnsmasq starts
+        nmcli connection up cockpit-wifi-ap
+
+        # Wait for interface to be fully up (max 10s)
+        for i in $(seq 1 10); do
+            ip link show "$AP_IFACE" | grep -q "UP" && break
+            sleep 1
+        done
+
         # Configure dnsmasq: DHCP with IP only, no gateway, no DNS
+        # bind-dynamic tolerates interfaces that appear after dnsmasq starts
         mkdir -p /etc/dnsmasq.d
         cat > /etc/dnsmasq.d/cockpit-wifi-ap.conf <<EOF
 interface=$AP_IFACE
 dhcp-range=${AP_DHCP_START},${AP_DHCP_END},255.255.255.0,8h
 # No dhcp-option=3 (gateway) -> client won't add a default route
 # No dhcp-option=6 (DNS) -> client won't use this for DNS
-bind-interfaces
+bind-dynamic
 EOF
         systemctl restart dnsmasq 2>/dev/null || true
-
-        nmcli connection up cockpit-wifi-ap
         ;;
 
     bridge)
