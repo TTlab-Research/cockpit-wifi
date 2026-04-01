@@ -85,7 +85,7 @@ jobs:
           ref: main
 
       - name: Install build dependencies
-        run: dnf install -y rpmdevtools nodejs npm make git
+        run: dnf install -y rpmdevtools nodejs npm make git systemd-rpm-macros
 
       - name: Setup rpmbuild tree
         run: rpmdev-setuptree

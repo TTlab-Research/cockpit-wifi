@@ -61,6 +61,8 @@ open_firewall() {
         # DNS on AP interface
         nft add rule inet cockpit-wifi-ap input iifname "$AP_IFACE" tcp dport 53 accept
         nft add rule inet cockpit-wifi-ap input iifname "$AP_IFACE" udp dport 53 accept
+        # Allow all traffic from AP clients to reach host services (e.g. Caddy on 80/443)
+        nft add rule inet cockpit-wifi-ap input iifname "$AP_IFACE" accept
         if [ "$AP_MODE" = "router" ]; then
             # Allow forwarding from AP to internet
             nft add chain inet cockpit-wifi-ap forward \
