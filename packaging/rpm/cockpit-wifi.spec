@@ -1,5 +1,5 @@
 Name:           cockpit-wifi
-Version:        0.1.0
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        Cockpit plugin for complete WiFi management
 License:        MIT
@@ -49,5 +49,10 @@ install -d %{buildroot}%{_sysconfdir}/cockpit-wifi
 %dir %{_sysconfdir}/cockpit-wifi
 
 %changelog
+* Tue Apr 01 2026 TTlab <info@ttlab.it> - 0.1.1-1
+- Fix ESLint errors: jsx-quotes, comma-dangle, no-use-before-define
+- Fix Stylelint: @use senza estensione .scss
+- Fix npm audit: brace-expansion moderate vulnerability
+
 * Sun Mar 23 2026 TTlab <info@ttlab.it> - 0.1.0-1
 - Initial release

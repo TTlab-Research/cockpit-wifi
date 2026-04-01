@@ -1,6 +1,6 @@
 {
   "name": "cockpit-wifi",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cockpit plugin for complete WiFi management: client connections and Access Point setup",
   "type": "module",
   "main": "index.js",
