@@ -165,10 +165,13 @@ jobs:
       - name: List packages to release
         run: ls -lh dist-packages/
 
-      - name: Delete existing release for this tag (if any)
+      - name: Delete all existing releases for this tag (if any)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete ${{ github.ref_name }} --yes 2>/dev/null || true
+        run: |
+          gh api repos/${{ github.repository }}/releases \
+            --jq '.[] | select(.tag_name == "${{ github.ref_name }}") | .id' | \
+            xargs -r -I{} gh api -X DELETE "repos/${{ github.repository }}/releases/{}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
