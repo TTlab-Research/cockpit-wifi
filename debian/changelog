@@ -1,3 +1,10 @@
+cockpit-wifi-ap (0.1.2~alpha.15-1) unstable; urgency=low
+
+  * Perf: replace fixed sleep 1+1 in bounce workaround with state-based
+    polling (0.2s intervals) — reduces ap-start boot time from ~9.5s to ~3s
+
+ -- TTlab <info@ttlab.it>  Thu, 02 Apr 2026 00:30:00 +0200
+
 cockpit-wifi-ap (0.1.2~alpha.14-1) unstable; urgency=high
 
   * Fix: ap-stop.sh uses $MAINPID (set by systemd in ExecStop) to reliably

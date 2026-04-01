@@ -270,14 +270,19 @@ esac
 # Workaround per PHY self-managed (iwlwifi): il dominio regolatorio si inizializza
 # in modo asincrono al boot e la prima attivazione NM parte prima che la scheda
 # sia pronta → beacon non trasmessi. Un bounce garantisce attivazione stabile.
+# I sleep fissi sono sostituiti da polling su stato interfaccia per ridurre i tempi.
 if [ "$AP_MODE" != "bridge" ]; then
-    sleep 1
     nmcli connection down cockpit-wifi-ap 2>/dev/null || true
-    sleep 1
+    # Attendi che l'interfaccia scenda (LOWER_UP sparisce) — max 3s
+    for i in $(seq 1 15); do
+        ip link show "$AP_IFACE" 2>/dev/null | grep -qv "LOWER_UP" && break
+        sleep 0.2
+    done
     nmcli connection up cockpit-wifi-ap
-    for i in $(seq 1 10); do
-        ip link show "$AP_IFACE" | grep -q "UP" && break
-        sleep 1
+    # Attendi che l'interfaccia sia operativa (LOWER_UP presente) — max 10s
+    for i in $(seq 1 50); do
+        ip link show "$AP_IFACE" 2>/dev/null | grep -q "LOWER_UP" && break
+        sleep 0.2
     done
     systemctl restart dnsmasq.service 2>/dev/null || true
 fi
