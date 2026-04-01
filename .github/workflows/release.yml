@@ -108,12 +108,11 @@ jobs:
           npm ci
           make pkg/lib
           NODE_ENV=production node build.js
-          # Create source tarball with pre-built dist
-          tar czf "$HOME/rpmbuild/SOURCES/cockpit-wifi-${VERSION}.tar.gz" \
-            --transform "s,^dist,cockpit-wifi-${VERSION}," \
+          # Tarball dir must match %{name}-%{version} = cockpit-wifi-BASE_VERSION
+          tar czf "$HOME/rpmbuild/SOURCES/cockpit-wifi-${BASE_VERSION}.tar.gz" \
+            --transform "s,^dist,cockpit-wifi-${BASE_VERSION}," \
             dist/ LICENSE README.md CHANGELOG.md
-          # Fix Source0 to match tarball name
-          sed -i "s/^Source0:.*/Source0:        %{name}-${VERSION}.tar.gz/" packaging/rpm/cockpit-wifi.spec
+          sed -i "s/^Source0:.*/Source0:        %{name}-${BASE_VERSION}.tar.gz/" packaging/rpm/cockpit-wifi.spec
           rpmbuild -bb packaging/rpm/cockpit-wifi.spec
           # Copy output to workspace for upload
           mkdir -p packages
