@@ -1,5 +1,5 @@
 [tools]
-node = "22"
+node = "24"
 python = "3.12"
 usage = "latest"
 lefthook = "latest"
@@ -42,10 +42,10 @@ npm run stylelint:fix
 description = "Install plugin to Cockpit (system-wide, requires sudo)"
 depends = ["build"]
 run = """
-sudo install -d /usr/share/cockpit/wifi
-sudo cp -r dist/* /usr/share/cockpit/wifi/
-sudo install -d /etc/cockpit-wifi
-echo "Installed to /usr/share/cockpit/wifi/"
+sudo install -d /usr/share/cockpit/wifi-ap
+sudo cp -r dist/* /usr/share/cockpit/wifi-ap/
+sudo install -d /etc/cockpit-wifi-ap
+echo "Installed to /usr/share/cockpit/wifi-ap/"
 echo "Restart Cockpit: sudo systemctl restart cockpit"
 """
 
@@ -54,18 +54,18 @@ description = "Install plugin for development (symlink in user dir)"
 depends = ["build"]
 run = """
 mkdir -p ~/.local/share/cockpit
-ln -sfn "$(pwd)/dist" ~/.local/share/cockpit/wifi
-echo "Dev symlink created: ~/.local/share/cockpit/wifi -> $(pwd)/dist"
+ln -sfn "$(pwd)/dist" ~/.local/share/cockpit/wifi-ap
+echo "Dev symlink created: ~/.local/share/cockpit/wifi-ap -> $(pwd)/dist"
 echo "Reload Cockpit page to see changes"
 """
 
 [tasks.uninstall]
 description = "Uninstall plugin from Cockpit"
 run = """
-sudo rm -rf /usr/share/cockpit/wifi
-sudo rm -rf /etc/cockpit-wifi
-rm -f ~/.local/share/cockpit/wifi
-echo "Uninstalled cockpit-wifi"
+sudo rm -rf /usr/share/cockpit/wifi-ap
+sudo rm -rf /etc/cockpit-wifi-ap
+rm -f ~/.local/share/cockpit/wifi-ap
+echo "Uninstalled cockpit-wifi-ap"
 """
 
 [tasks.deb]
