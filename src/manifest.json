@@ -2,10 +2,10 @@
     "requires": {
         "cockpit": "270"
     },
-    "tools": {
+    "menu": {
         "index": {
             "label": "Access Point",
-            "section": "network"
+            "order": 41
         }
     },
     "bridges": [
