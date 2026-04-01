@@ -23,11 +23,20 @@ AP_SSID=$(read_config ssid "")
 AP_PASS=$(read_config passphrase "")
 AP_ADDR=$(read_config address "192.168.4.1")
 AP_CHANNEL=$(read_config channel "6")
+AP_BAND=$(read_config band "auto")
 AP_IFACE=$(read_config interface "")
 AP_MODE=$(read_config mode "router")
 AP_BRIDGE_IFACE=$(read_config bridgeInterface "")
 AP_DHCP_START=$(read_config dhcpRangeStart "192.168.4.20")
 AP_DHCP_END=$(read_config dhcpRangeEnd "192.168.4.252")
+
+# nmcli uses "bg" for 2.4GHz and "a" for 5GHz.
+# When band is "auto", do not pass band or channel to nmcli.
+case "$AP_BAND" in
+    2.4GHz) NM_BAND_ARGS="wifi.band bg wifi.channel ${AP_CHANNEL}" ;;
+    5GHz)   NM_BAND_ARGS="wifi.band a  wifi.channel ${AP_CHANNEL}" ;;
+    *)      NM_BAND_ARGS="" ;;
+esac
 
 if [ -z "$AP_SSID" ] || [ -z "$AP_PASS" ] || [ -z "$AP_IFACE" ]; then
     echo '{"error": "Missing required config: ssid, passphrase, or interface"}' >&2
@@ -57,7 +66,7 @@ case "$AP_MODE" in
             ssid "$AP_SSID" \
             autoconnect no \
             wifi.mode ap \
-            wifi.channel "$AP_CHANNEL" \
+            $NM_BAND_ARGS \
             ipv4.method manual \
             ipv4.addresses "${AP_ADDR}/24"
 
@@ -99,7 +108,7 @@ EOF
             ssid "$AP_SSID" \
             autoconnect no \
             wifi.mode ap \
-            wifi.channel "$AP_CHANNEL" \
+            $NM_BAND_ARGS \
             ipv4.method manual \
             ipv4.addresses "${AP_ADDR}/24"
 
@@ -147,7 +156,7 @@ EOF
             ssid "$AP_SSID" \
             autoconnect no \
             wifi.mode ap \
-            wifi.channel "$AP_CHANNEL" \
+            $NM_BAND_ARGS \
             slave-type bridge \
             master cockpit-wifi-br0
 
