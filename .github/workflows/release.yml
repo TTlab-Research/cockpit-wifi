@@ -55,7 +55,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y devscripts debhelper
+          sudo apt-get install -y devscripts debhelper nodejs npm
 
       - name: Build .deb package
         run: |
@@ -93,7 +93,18 @@ jobs:
       - name: Build .rpm package
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          sed -i "s/^Version:.*/Version:        $VERSION/" packaging/rpm/cockpit-wifi.spec
+          # RPM non accetta '-' nella Version — converte 0.1.1-beta.1 in:
+          #   Version: 0.1.1  Release: 0.beta.1.1
+          BASE_VERSION="${VERSION%%-*}"
+          PRE_RELEASE="${VERSION#*-}"
+          if [ "$BASE_VERSION" != "$VERSION" ]; then
+            RPM_RELEASE="0.${PRE_RELEASE}.1"
+          else
+            BASE_VERSION="$VERSION"
+            RPM_RELEASE="1"
+          fi
+          sed -i "s/^Version:.*/Version:        ${BASE_VERSION}/" packaging/rpm/cockpit-wifi.spec
+          sed -i "s/^Release:.*/Release:        ${RPM_RELEASE}%{?dist}/" packaging/rpm/cockpit-wifi.spec
           npm ci
           make pkg/lib
           NODE_ENV=production node build.js
@@ -101,6 +112,8 @@ jobs:
           tar czf "$HOME/rpmbuild/SOURCES/cockpit-wifi-${VERSION}.tar.gz" \
             --transform "s,^dist,cockpit-wifi-${VERSION}," \
             dist/ LICENSE README.md CHANGELOG.md
+          # Fix Source0 to match tarball name
+          sed -i "s/^Source0:.*/Source0:        %{name}-${VERSION}.tar.gz/" packaging/rpm/cockpit-wifi.spec
           rpmbuild -bb packaging/rpm/cockpit-wifi.spec
           # Copy output to workspace for upload
           mkdir -p packages
