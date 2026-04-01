@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start WiFi Access Point using NetworkManager + dedicated dnsmasq instance
+# Start WiFi Access Point using NetworkManager + system dnsmasq
 set -euo pipefail
 
 CONFIG_FILE="/etc/cockpit-wifi-ap/ap.conf"
@@ -49,6 +49,17 @@ if [ "$AP_MODE" = "bridge" ] && [ -z "$AP_BRIDGE_IFACE" ]; then
     exit 1
 fi
 
+# ── Ensure system dnsmasq can coexist with systemd-resolved ──
+# bind-interfaces: bind only to specific interfaces, not 0.0.0.0
+# except-interface=lo: never bind to loopback (used by systemd-resolved)
+DNSMASQ_CONF="/etc/dnsmasq.conf"
+if ! grep -q "^bind-interfaces" "$DNSMASQ_CONF" 2>/dev/null; then
+    echo "bind-interfaces" >> "$DNSMASQ_CONF"
+fi
+if ! grep -q "^except-interface=lo" "$DNSMASQ_CONF" 2>/dev/null; then
+    echo "except-interface=lo" >> "$DNSMASQ_CONF"
+fi
+
 # ── Firewall: open DHCP port via dedicated nft table (fallback: iptables) ──
 # Uses a separate table so we never touch the user's existing ruleset.
 open_firewall() {
@@ -86,30 +97,30 @@ nmcli connection delete cockpit-wifi-br0-port-eth 2>/dev/null || true
 # Remove any leftover NM dnsmasq-shared.d config (caused bind-dynamic conflict)
 rm -f /etc/NetworkManager/dnsmasq-shared.d/cockpit-wifi-ap.conf
 
-# Kill any previously running cockpit-wifi-ap dnsmasq instance
+# Remove any leftover dedicated dnsmasq pid (legacy)
 if [ -f /run/cockpit-wifi-ap-dnsmasq.pid ]; then
     kill "$(cat /run/cockpit-wifi-ap-dnsmasq.pid)" 2>/dev/null || true
     rm -f /run/cockpit-wifi-ap-dnsmasq.pid
 fi
 
-# ── Helper: start dedicated dnsmasq for router/isolated modes ──
-# Uses --interface (SO_BINDTODEVICE) which correctly receives DHCP broadcast
-# packets (0.0.0.0 → 255.255.255.255), unlike --listen-address.
-# Binds only to AP_IFACE so it never conflicts with systemd-resolved on port 53.
+# ── Helper: write dnsmasq config and restart system service ──
+# Writes to /etc/dnsmasq.d/cockpit-wifi-ap.conf then restarts dnsmasq.service.
+# bind-interfaces (set above in dnsmasq.conf) ensures no conflict with systemd-resolved.
 start_dnsmasq() {
-    local extra_opts="$1"
+    local extra_conf="$1"
     DEVICE_HOSTNAME=$(hostname)
-    /usr/sbin/dnsmasq \
-        --pid-file=/run/cockpit-wifi-ap-dnsmasq.pid \
-        --interface="$AP_IFACE" \
-        --bind-interfaces \
-        --except-interface=lo \
-        --dhcp-range="${AP_DHCP_START},${AP_DHCP_END},255.255.255.0,8h" \
-        --dhcp-option=6,"${AP_ADDR}" \
-        --address="/${DEVICE_HOSTNAME}.local/${AP_ADDR}" \
-        --no-resolv \
-        --no-hosts \
-        $extra_opts
+    cat > /etc/dnsmasq.d/cockpit-wifi-ap.conf << EOF
+# Managed by cockpit-wifi-ap — do not edit manually
+interface=${AP_IFACE}
+dhcp-range=${AP_DHCP_START},${AP_DHCP_END},255.255.255.0,8h
+dhcp-option=6,${AP_ADDR}
+address=/${DEVICE_HOSTNAME}.local/${AP_ADDR}
+no-resolv
+no-hosts
+${extra_conf}
+EOF
+    systemctl enable dnsmasq.service 2>/dev/null || true
+    systemctl restart dnsmasq.service
 }
 
 case "$AP_MODE" in
@@ -150,8 +161,9 @@ case "$AP_MODE" in
 
         open_firewall
 
-        # dhcp-option=3 = gateway (this device)
-        start_dnsmasq "--dhcp-option=3,${AP_ADDR} --server=${UPSTREAM_DNS}"
+        # dhcp-option=3 = gateway (this device), server = upstream DNS
+        start_dnsmasq "dhcp-option=3,${AP_ADDR}
+server=${UPSTREAM_DNS}"
 
         # NAT masquerading
         if [ -n "$DEFAULT_IFACE" ]; then
@@ -188,9 +200,8 @@ case "$AP_MODE" in
 
         open_firewall
 
-        # Suppress gateway option (dhcp-option=3 empty = no default router)
-        # dnsmasq auto-sends the interface IP as gateway if not explicitly suppressed
-        start_dnsmasq "--dhcp-option=3"
+        # dhcp-option=3 empty = suppress default gateway (clients get IP only)
+        start_dnsmasq "dhcp-option=3"
         ;;
 
     bridge)

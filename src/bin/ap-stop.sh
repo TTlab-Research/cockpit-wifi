@@ -14,15 +14,16 @@ if command -v iptables >/dev/null 2>&1; then
     done
 fi
 
-# Stop dedicated cockpit-wifi-ap dnsmasq instance
+# Remove AP dnsmasq config and reload system dnsmasq
+rm -f /etc/dnsmasq.d/cockpit-wifi-ap.conf
+rm -f /etc/NetworkManager/dnsmasq-shared.d/cockpit-wifi-ap.conf
+systemctl restart dnsmasq.service 2>/dev/null || true
+
+# Legacy: kill any leftover dedicated dnsmasq instance
 if [ -f /run/cockpit-wifi-ap-dnsmasq.pid ]; then
     kill "$(cat /run/cockpit-wifi-ap-dnsmasq.pid)" 2>/dev/null || true
     rm -f /run/cockpit-wifi-ap-dnsmasq.pid
 fi
-
-# Remove any leftover dnsmasq config files
-rm -f /etc/dnsmasq.d/cockpit-wifi-ap.conf
-rm -f /etc/NetworkManager/dnsmasq-shared.d/cockpit-wifi-ap.conf
 
 # Bring down and delete AP connection
 nmcli connection down cockpit-wifi-ap 2>/dev/null || true
