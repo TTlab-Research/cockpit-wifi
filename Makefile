@@ -1,9 +1,9 @@
-PACKAGE_NAME := cockpit-wifi
+PACKAGE_NAME := cockpit-wifi-ap
 VERSION := 0.1.0
 PREFIX ?= /usr/local
 DESTDIR ?=
-INSTALL_DIR = $(DESTDIR)$(PREFIX)/share/cockpit/wifi
-CONFIG_DIR = $(DESTDIR)/etc/cockpit-wifi
+INSTALL_DIR = $(DESTDIR)$(PREFIX)/share/cockpit/wifi-ap
+CONFIG_DIR = $(DESTDIR)/etc/cockpit-wifi-ap
 
 # Cockpit shared lib checkout (dark-theme, page.scss, etc.)
 COCKPIT_REPO_URL = https://github.com/cockpit-project/cockpit.git
@@ -38,10 +38,10 @@ uninstall:
 
 devel-install: build
 	mkdir -p ~/.local/share/cockpit
-	ln -sfn $$(pwd)/dist ~/.local/share/cockpit/wifi
+	ln -sfn $$(pwd)/dist ~/.local/share/cockpit/wifi-ap
 
 devel-uninstall:
-	rm -f ~/.local/share/cockpit/wifi
+	rm -f ~/.local/share/cockpit/wifi-ap
 
 dist: build
 	tar czf $(PACKAGE_NAME)-$(VERSION).tar.gz \

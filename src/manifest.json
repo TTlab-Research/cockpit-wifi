@@ -4,7 +4,8 @@
     },
     "tools": {
         "index": {
-            "label": "WiFi"
+            "label": "Access Point",
+            "section": "network"
         }
     },
     "bridges": [

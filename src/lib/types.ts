@@ -1,23 +1,3 @@
-/** WiFi network discovered via scan */
-export interface WifiNetwork {
-    ssid: string;
-    signal: number;
-    security: string;
-    frequency: number;
-    bssid: string;
-    inUse: boolean;
-}
-
-/** Saved WiFi connection profile */
-export interface WifiConnection {
-    id: string;
-    uuid: string;
-    ssid: string;
-    type: string;
-    device: string;
-    active: boolean;
-}
-
 /** Wireless device info */
 export interface WifiDevice {
     device: string;
@@ -55,18 +35,6 @@ export interface APConfig {
     dhcpRangeStart: string;
     dhcpRangeEnd: string;
     enabled: boolean;
-}
-
-/** WiFi connection status for dashboard */
-export interface WifiStatus {
-    device: string;
-    state: string;
-    ssid: string;
-    signal: number;
-    frequency: number;
-    bitrate: string;
-    security: string;
-    ipAddress: string;
 }
 
 /** Access Point runtime status */

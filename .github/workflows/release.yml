@@ -108,20 +108,20 @@ jobs:
           npm ci
           make pkg/lib
           NODE_ENV=production node build.js
-          # Build tarball: cockpit-wifi-BASE_VERSION/
-          #   cockpit/  <- pre-built plugin files (what goes in /usr/share/cockpit/wifi/)
+          # Build tarball: cockpit-wifi-ap-BASE_VERSION/
+          #   cockpit/  <- pre-built plugin files (what goes in /usr/share/cockpit/wifi-ap/)
           #   LICENSE, README.md, CHANGELOG.md
-          SRCDIR="cockpit-wifi-${BASE_VERSION}"
+          SRCDIR="cockpit-wifi-ap-${BASE_VERSION}"
           mkdir -p "/tmp/${SRCDIR}/cockpit"
           cp -r dist/* "/tmp/${SRCDIR}/cockpit/"
           cp LICENSE README.md CHANGELOG.md "/tmp/${SRCDIR}/"
-          tar czf "$HOME/rpmbuild/SOURCES/cockpit-wifi-${BASE_VERSION}.tar.gz" \
+          tar czf "$HOME/rpmbuild/SOURCES/cockpit-wifi-ap-${BASE_VERSION}.tar.gz" \
             -C /tmp "${SRCDIR}/"
           sed -i "s/^Source0:.*/Source0:        %{name}-${BASE_VERSION}.tar.gz/" packaging/rpm/cockpit-wifi.spec
           rpmbuild -bb packaging/rpm/cockpit-wifi.spec
           # Copy output to workspace for upload
           mkdir -p packages
-          cp "$HOME/rpmbuild/RPMS/noarch/cockpit-wifi-"*.rpm packages/
+          cp "$HOME/rpmbuild/RPMS/noarch/cockpit-wifi-ap-"*.rpm packages/
 
       - name: Upload .rpm artifact
         uses: actions/upload-artifact@v4

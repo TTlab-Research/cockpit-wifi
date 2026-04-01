@@ -1,17 +1,20 @@
-cockpit-wifi (0.1.1-1) unstable; urgency=low
+cockpit-wifi-ap (0.1.1-1) unstable; urgency=low
 
-  * Fix ESLint errors: jsx-quotes, comma-dangle, no-use-before-define
-  * Fix Stylelint: remove extension from @use directive
-  * Fix npm audit: brace-expansion moderate vulnerability
+  * Rename project to cockpit-wifi-ap (AP management only)
+  * Remove WiFi client tab and dashboard (now native in Cockpit)
+  * Fix PatternFly CSS not loading (missing link in index.html)
+  * Add section "network" to manifest for Cockpit navigation placement
+  * Replace NumberInput with FormSelect for channel selection
+  * Fix HelperTextItem variant: indeterminate -> default
+  * Separate DHCP range into two distinct FormGroups
 
- -- TTlab <info@ttlab.it>  Tue, 01 Apr 2026 09:00:00 +0200
+ -- TTlab <info@ttlab.it>  Wed, 01 Apr 2026 12:00:00 +0200
 
-cockpit-wifi (0.1.0-1) unstable; urgency=medium
+cockpit-wifi-ap (0.1.0-1) unstable; urgency=medium
 
   * Initial release
-  * WiFi client: scan, connect, disconnect, delete connections
   * Access Point: create hotspot, DHCP, NAT/masquerading
-  * Dashboard with real-time status
+  * Three modes: router, isolated network, bridge to ethernet
   * PatternFly 6 with dark theme support
 
  -- TTlab <info@ttlab.it>  Sun, 23 Mar 2026 12:00:00 +0100

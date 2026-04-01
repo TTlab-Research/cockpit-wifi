@@ -1,7 +1,7 @@
 import cockpit from 'cockpit';
-import type { WifiNetwork, WifiConnection, WifiDevice, NetInterface, APConfig, WifiStatus, APStatus } from './types';
+import type { WifiDevice, NetInterface, APConfig, APStatus } from './types';
 
-const BIN_PATH = '/usr/share/cockpit/wifi/bin';
+const BIN_PATH = '/usr/share/cockpit/wifi-ap/bin';
 
 /** Spawn a privileged backend script */
 function runScript (script: string, args: string[] = []): Promise<string> {
@@ -9,45 +9,6 @@ function runScript (script: string, args: string[] = []): Promise<string> {
         superuser: 'require',
         err: 'message'
     });
-}
-
-/** Scan for available WiFi networks */
-export async function wifiScan (): Promise<WifiNetwork[]> {
-    const output = await runScript('wifi-scan.py');
-    return JSON.parse(output);
-}
-
-/** List saved WiFi connections */
-export async function wifiListConnections (): Promise<WifiConnection[]> {
-    const output = await runScript('wifi-list-connections.py');
-    return JSON.parse(output);
-}
-
-/** Connect to a WiFi network (password via stdin to avoid ps exposure) */
-export async function wifiConnect (ssid: string, password: string): Promise<string> {
-    const proc = cockpit.spawn([`${BIN_PATH}/wifi-connect.sh`, ssid], {
-        superuser: 'require',
-        err: 'message'
-    });
-    proc.input(password + '\n');
-    return proc;
-}
-
-/** Disconnect from the current WiFi network */
-export async function wifiDisconnect (connectionId: string): Promise<string> {
-    return runScript('wifi-disconnect.sh', [connectionId]);
-}
-
-/** Delete a saved WiFi connection */
-export async function wifiDelete (connectionId: string): Promise<string> {
-    return runScript('wifi-delete.sh', [connectionId]);
-}
-
-/** Get current WiFi client status */
-export async function wifiStatus (): Promise<WifiStatus | null> {
-    const output = await runScript('wifi-status.py');
-    const data = JSON.parse(output);
-    return data.connected ? data : null;
 }
 
 /** List available wireless devices */
@@ -65,7 +26,7 @@ export async function netInterfaces (): Promise<NetInterface[]> {
 /** Get Access Point configuration */
 export async function apGetConfig (): Promise<APConfig | null> {
     try {
-        const content = await cockpit.file('/etc/cockpit-wifi/ap.conf', {
+        const content = await cockpit.file('/etc/cockpit-wifi-ap/ap.conf', {
             superuser: 'try'
         }).read();
         return JSON.parse(content);
@@ -76,7 +37,7 @@ export async function apGetConfig (): Promise<APConfig | null> {
 
 /** Save Access Point configuration */
 export async function apSetConfig (config: APConfig): Promise<void> {
-    await cockpit.file('/etc/cockpit-wifi/ap.conf', {
+    await cockpit.file('/etc/cockpit-wifi-ap/ap.conf', {
         superuser: 'require'
     }).replace(JSON.stringify(config, null, 2));
 }

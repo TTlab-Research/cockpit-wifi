@@ -15,7 +15,6 @@ import {
     Split,
     SplitItem,
     Label,
-    NumberInput,
     DescriptionList,
     DescriptionListGroup,
     DescriptionListTerm,
@@ -45,9 +44,18 @@ const DEFAULT_CONFIG: APConfig = {
 
 const MODE_DESCRIPTIONS: Record<APMode, string> = {
     router: 'DHCP completo con gateway, DNS e NAT. I client possono navigare in internet tramite questo dispositivo.',
-    isolated: 'DHCP assegna solo un IP. I client possono accedere ai servizi del dispositivo (es. Cockpit) ma non navigano in internet. Non interferisce con altre connessioni del client.',
-    bridge: 'Nessun DHCP locale. L\'interfaccia WiFi viene collegata in bridge con un\'interfaccia ethernet. Un server DHCP esterno sulla LAN gestisce l\'assegnazione degli indirizzi.'
+    isolated: 'DHCP assegna solo un IP. I client accedono ai servizi del dispositivo (es. Cockpit) ma non internet. Non interferisce con altre connessioni del client.',
+    bridge: "Nessun DHCP locale. L'interfaccia WiFi viene collegata in bridge con ethernet. Un server DHCP esterno sulla LAN gestisce l'assegnazione degli indirizzi."
 };
+
+const CHANNELS_24: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+const CHANNELS_5: number[] = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165];
+
+function channelsForBand (band: string): number[] {
+    if (band === '5GHz') return CHANNELS_5;
+    if (band === '2.4GHz') return CHANNELS_24;
+    return [...CHANNELS_24, ...CHANNELS_5];
+}
 
 export const AccessPointPage: React.FC = () => {
     const [config, setConfig] = useState<APConfig>(DEFAULT_CONFIG);
@@ -101,7 +109,7 @@ export const AccessPointPage: React.FC = () => {
             return;
         }
         if (config.mode === 'bridge' && !config.bridgeInterface) {
-            setError('Seleziona un\'interfaccia ethernet per il bridge');
+            setError("Seleziona un'interfaccia ethernet per il bridge");
             return;
         }
         setSaving(true);
@@ -147,6 +155,7 @@ export const AccessPointPage: React.FC = () => {
     }
 
     const isActive = status?.active ?? false;
+    const availableChannels = channelsForBand(config.band);
 
     return (
         <>
@@ -256,27 +265,18 @@ export const AccessPointPage: React.FC = () => {
                             </FormSelect>
                         </FormGroup>
 
-                        <FormGroup label='Canale' fieldId='ap-channel'>
-                            <NumberInput
-                                id='ap-channel'
-                                value={config.channel}
-                                min={1}
-                                max={165}
-                                onMinus={() => updateConfig('channel', Math.max(1, config.channel - 1))}
-                                onPlus={() => updateConfig('channel', Math.min(165, config.channel + 1))}
-                                onChange={(event) => {
-                                    const val = parseInt((event.target as HTMLInputElement).value, 10);
-                                    if (!isNaN(val)) updateConfig('channel', val);
-                                }}
-                                isDisabled={isActive}
-                            />
-                        </FormGroup>
-
                         <FormGroup label='Banda' fieldId='ap-band'>
                             <FormSelect
                                 id='ap-band'
                                 value={config.band}
-                                onChange={(_event, val) => updateConfig('band', val)}
+                                onChange={(_event, val) => {
+                                    updateConfig('band', val);
+                                    // reset channel to first available for new band
+                                    const chs = channelsForBand(val);
+                                    if (!chs.includes(config.channel)) {
+                                        updateConfig('channel', chs[0]);
+                                    }
+                                }}
                                 isDisabled={isActive}
                             >
                                 <FormSelectOption value='auto' label='Automatica' />
@@ -285,12 +285,26 @@ export const AccessPointPage: React.FC = () => {
                             </FormSelect>
                         </FormGroup>
 
+                        <FormGroup label='Canale' fieldId='ap-channel'>
+                            <FormSelect
+                                id='ap-channel'
+                                value={String(config.channel)}
+                                onChange={(_event, val) => updateConfig('channel', parseInt(val, 10))}
+                                isDisabled={isActive}
+                            >
+                                {availableChannels.map(ch => (
+                                    <FormSelectOption key={ch} value={String(ch)} label={String(ch)} />
+                                ))}
+                            </FormSelect>
+                        </FormGroup>
+
                         {/* AP Mode Selection */}
-                        <FormGroup label='Modalità rete' fieldId='ap-mode'>
+                        <FormGroup label='Modalità rete' fieldId='ap-mode' role='radiogroup'>
                             <Radio
                                 id='ap-mode-router'
                                 name='ap-mode'
                                 label='Router (DHCP + NAT + Gateway)'
+                                description={MODE_DESCRIPTIONS.router}
                                 isChecked={config.mode === 'router'}
                                 onChange={() => updateConfig('mode', 'router')}
                                 isDisabled={isActive}
@@ -299,6 +313,7 @@ export const AccessPointPage: React.FC = () => {
                                 id='ap-mode-isolated'
                                 name='ap-mode'
                                 label='Rete isolata (DHCP solo IP)'
+                                description={MODE_DESCRIPTIONS.isolated}
                                 isChecked={config.mode === 'isolated'}
                                 onChange={() => updateConfig('mode', 'isolated')}
                                 isDisabled={isActive}
@@ -307,20 +322,20 @@ export const AccessPointPage: React.FC = () => {
                                 id='ap-mode-bridge'
                                 name='ap-mode'
                                 label='Bridge (DHCP esterno)'
+                                description={MODE_DESCRIPTIONS.bridge}
                                 isChecked={config.mode === 'bridge'}
                                 onChange={() => updateConfig('mode', 'bridge')}
                                 isDisabled={isActive}
                             />
-                            <HelperText>
-                                <HelperTextItem variant='indeterminate'>
-                                    {MODE_DESCRIPTIONS[config.mode]}
-                                </HelperTextItem>
-                            </HelperText>
                         </FormGroup>
 
                         {/* Bridge interface - only in bridge mode */}
                         {config.mode === 'bridge' && (
-                            <FormGroup label='Interfaccia bridge' fieldId='ap-bridge-iface' helperText='Interfaccia ethernet da collegare in bridge con il WiFi AP'>
+                            <FormGroup
+                                label='Interfaccia bridge'
+                                fieldId='ap-bridge-iface'
+                                helperText='Interfaccia ethernet da collegare in bridge con il WiFi AP'
+                            >
                                 <FormSelect
                                     id='ap-bridge-iface'
                                     value={config.bridgeInterface}
@@ -340,54 +355,49 @@ export const AccessPointPage: React.FC = () => {
                             </FormGroup>
                         )}
 
-                        {/* IP and DHCP config - not shown in bridge mode */}
+                        {/* IP address - shown in all modes */}
+                        <FormGroup
+                            label={config.mode === 'bridge' ? 'IP del bridge' : 'Indirizzo IP'}
+                            fieldId='ap-addr'
+                            helperText={config.mode === 'bridge' ? "IP assegnato all'interfaccia bridge del dispositivo" : undefined}
+                        >
+                            <TextInput
+                                id='ap-addr'
+                                value={config.address}
+                                onChange={(_event, val) => updateConfig('address', val)}
+                                isDisabled={isActive}
+                            />
+                        </FormGroup>
+
+                        {/* DHCP range - only in router and isolated modes */}
                         {config.mode !== 'bridge' && (
                             <>
-                                <FormGroup label='Indirizzo IP' fieldId='ap-addr'>
+                                <FormGroup label='DHCP inizio' fieldId='ap-dhcp-start'>
                                     <TextInput
-                                        id='ap-addr'
-                                        value={config.address}
-                                        onChange={(_event, val) => updateConfig('address', val)}
+                                        id='ap-dhcp-start'
+                                        value={config.dhcpRangeStart}
+                                        onChange={(_event, val) => updateConfig('dhcpRangeStart', val)}
                                         isDisabled={isActive}
                                     />
                                 </FormGroup>
 
-                                <FormGroup label='Range DHCP' fieldId='ap-dhcp'>
-                                    <Split hasGutter>
-                                        <SplitItem>
-                                            <TextInput
-                                                id='ap-dhcp-start'
-                                                value={config.dhcpRangeStart}
-                                                onChange={(_event, val) => updateConfig('dhcpRangeStart', val)}
-                                                aria-label='DHCP range start'
-                                                isDisabled={isActive}
-                                            />
-                                        </SplitItem>
-                                        <SplitItem>—</SplitItem>
-                                        <SplitItem>
-                                            <TextInput
-                                                id='ap-dhcp-end'
-                                                value={config.dhcpRangeEnd}
-                                                onChange={(_event, val) => updateConfig('dhcpRangeEnd', val)}
-                                                aria-label='DHCP range end'
-                                                isDisabled={isActive}
-                                            />
-                                        </SplitItem>
-                                    </Split>
+                                <FormGroup label='DHCP fine' fieldId='ap-dhcp-end'>
+                                    <TextInput
+                                        id='ap-dhcp-end'
+                                        value={config.dhcpRangeEnd}
+                                        onChange={(_event, val) => updateConfig('dhcpRangeEnd', val)}
+                                        isDisabled={isActive}
+                                    />
                                 </FormGroup>
                             </>
                         )}
 
-                        {/* IP for bridge mode (AP's own IP on the bridge) */}
                         {config.mode === 'bridge' && (
-                            <FormGroup label='Indirizzo IP del bridge' fieldId='ap-addr' helperText="IP assegnato all'interfaccia bridge del dispositivo">
-                                <TextInput
-                                    id='ap-addr'
-                                    value={config.address}
-                                    onChange={(_event, val) => updateConfig('address', val)}
-                                    isDisabled={isActive}
-                                />
-                            </FormGroup>
+                            <HelperText>
+                                <HelperTextItem variant='default'>
+                                    In modalità bridge il DHCP è gestito dal server esterno sulla LAN.
+                                </HelperTextItem>
+                            </HelperText>
                         )}
 
                         <ActionGroup>

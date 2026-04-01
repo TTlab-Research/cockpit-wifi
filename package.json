@@ -1,12 +1,12 @@
 {
-  "name": "cockpit-wifi",
+  "name": "cockpit-wifi-ap",
   "version": "0.1.1",
-  "description": "Cockpit plugin for complete WiFi management: client connections and Access Point setup",
+  "description": "Cockpit plugin for WiFi Access Point management",
   "type": "module",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TTlab-official/cockpit-wifi.git"
+    "url": "https://github.com/TTlab-Research/cockpit-wifi-ap.git"
   },
   "author": {
     "name": "TTlab",

@@ -9,9 +9,9 @@ override_dh_auto_build:
 	NODE_ENV=production ./build.js
 
 override_dh_auto_install:
-	install -d debian/cockpit-wifi/usr/share/cockpit/wifi
-	cp -r dist/* debian/cockpit-wifi/usr/share/cockpit/wifi/
-	install -d debian/cockpit-wifi/etc/cockpit-wifi
+	install -d debian/cockpit-wifi-ap/usr/share/cockpit/wifi-ap
+	cp -r dist/* debian/cockpit-wifi-ap/usr/share/cockpit/wifi-ap/
+	install -d debian/cockpit-wifi-ap/etc/cockpit-wifi-ap
 
 override_dh_auto_clean:
 	rm -rf dist node_modules
