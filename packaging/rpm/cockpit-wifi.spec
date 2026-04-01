@@ -45,6 +45,11 @@ install -d %{buildroot}%{_sysconfdir}/cockpit-wifi-ap
 %dir %{_sysconfdir}/cockpit-wifi-ap
 
 %changelog
+* Wed Apr 01 2026 TTlab <info@ttlab.it> - 0.1.2-1
+- Fix config path: /etc/cockpit-wifi-ap/ap.conf (was /etc/cockpit-wifi)
+- Fix error display: parse JSON errors from backend scripts
+- CI: Node.js 24, FORCE_JAVASCRIPT_ACTIONS_TO_NODE24
+
 * Wed Apr 01 2026 TTlab <info@ttlab.it> - 0.1.1-1
 - Rename to cockpit-wifi-ap, AP management only
 - Fix PatternFly CSS, navigation section, channel select
